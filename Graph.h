@@ -30,6 +30,31 @@ struct Graph{
 
     VertexPtr findVertex(const string &vertexName);
 
+    inline void resetVertices(){
+        for (const auto & p : getVertices()){
+            p.second->setVisited (false);
+        }
+    }
+
+    inline void visit(VertexPtr vert){
+        cout << "\nVisiting " << vert->getName() << endl;
+        vert->setVisited(true);
+    }
+
+    bool DFS(VertexPtr src,VertexPtr dest);
+    bool BFS(VertexPtr src,VertexPtr dest);
+
+    inline bool BFS( string src,string dest){
+        auto src_vert  = findVertex(src);
+        auto dest_vert  = findVertex(dest);
+        return BFS(src_vert,dest_vert);
+    }
+
+    inline bool DFS(string src,string dest){
+        auto src_vert  = findVertex(src);
+        auto dest_vert  = findVertex(dest);
+        return DFS(src_vert,dest_vert);
+    }
 
     bool addVertex(const string &vertexName);
 

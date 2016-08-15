@@ -1,8 +1,8 @@
-
-#include "Common.h"
 #include "DijkstraSolver.h"
-#include "Graph.h"
-#include "Vertex.h"
+
+void testDFS(Graph & graph);
+void testBFS(Graph & graph);
+void testDijkstra(Graph & graph);
 
 int main()
 {
@@ -24,12 +24,11 @@ int main()
  * 300|
  *    |
  *    |   20       80         30
- *  Kiev --- Lviv --- Mardid --- Rome
+ *  Kiev --- Lviv --- Rome ---  Mardid
  *    |
  *  50|
  *    |    10
  *  Riga  --- Talinn
- *
  *
  */
 
@@ -37,19 +36,39 @@ int main()
     graph.connect("Kiev", "Riga", 50);
     graph.connect("Kiev", "Washington", 300);
 
-    graph.connect("Riga", "Talinn", 10); //Kiev - Talinn = 50 + 10
-    graph.connect("Lviv", "Madrid", 80);  //Kiev - Madrid = 20 + 80
-    graph.connect("Washington" , "New York", 30);  //Kiev - New_York = 30 + 300
+    graph.connect("Riga", "Talinn", 10);            //Kiev - Talinn = 50 + 10
+    graph.connect("Lviv", "Rome", 80);              //Kiev - Rome  = 20 + 80
+    graph.connect("Washington" , "New York", 30);   //Kiev - New_York =  300 + 30
+    graph.connect("Rome", "Madrid", 30);            //Kiev - Madrid = 20 + 80 + 30
 
-    graph.connect("Madrid", "Rome", 30);  //Kiev - Rome = 20 + 80 + 30
 
-    DijkstraSolver solver(graph);
-
-    if( solver.solve("Kiev", "New York") == true){
-
-        solver.printDistances();
-    }
+    testDFS(graph);
+    testBFS(graph);
+    testDijkstra(graph);
 
     return 0;
 }
+
+
+void testDFS(Graph & graph){
+    graph.resetVertices();
+    cout << "\nDFS:\n" << endl;
+    graph.DFS("Kiev","Rome");
+}
+
+void testBFS(Graph & graph){
+    graph.resetVertices();
+    cout << "\nBFS:\n" << endl;
+    graph.BFS("Kiev","Rome");
+}
+
+void testDijkstra(Graph & graph){
+    graph.resetVertices();
+    DijkstraSolver solver(graph);
+    if( solver.solve("Kiev", "Madrid") == true){
+        solver.printDistances();
+    }
+}
+
+
 

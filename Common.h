@@ -9,7 +9,8 @@
 #include <iostream>
 #include <cstdbool>
 #include <algorithm>
-
+#include <stack>
+#include <queue>
 
 using std::cerr;
 using std::cout;
@@ -20,6 +21,8 @@ using std::string;
 using std::list;
 using std::map;
 using std::multiset;
+using std::stack;
+using std::queue;
 
 using std::weak_ptr;
 using std::shared_ptr;

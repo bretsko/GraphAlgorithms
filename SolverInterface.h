@@ -7,7 +7,7 @@ class SolverInterface{
 
 public:
 
-    SolverInterface(const Graph & graph) : m_graph(make_unique<Graph>(graph)) {}
+    SolverInterface(const Graph & graph) : m_graph(make_shared<Graph>(graph)) {}
 
     virtual ~SolverInterface() = default;
 

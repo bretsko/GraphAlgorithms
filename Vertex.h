@@ -37,6 +37,8 @@ struct Vertex {
 
     void removeMutualConnection(Vertex &vert);
 
+    VertexPtr getNearestNeighbour();
+    EdgePtr getNearestNeighbourConnection();
 
     inline list<EdgePtr> * getEdges(){
         return &edges;

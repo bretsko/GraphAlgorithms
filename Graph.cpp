@@ -4,6 +4,84 @@ Graph::Graph(const VertexPtrMap &vertices):verticesMap(vertices){
 
 }
 
+bool Graph::BFS(VertexPtr src,VertexPtr dest)
+{
+    if (src == dest)
+        return true;
+
+    VertexPtr current = nullptr;
+
+    queue<VertexPtr> vertQueue;
+    visit(src);
+    vertQueue.push(src);
+
+    while(!vertQueue.empty())
+    {
+        current = vertQueue.front();
+        vertQueue.pop();
+
+        auto edges = current->getEdges();
+
+        //visit all adjacents
+        for (const EdgePtr & e : *edges ){
+
+            if(VertexPtr vertPtr = e->getVertex().lock()){
+
+                if (vertPtr->isVisited() == false){
+                    visit(vertPtr);
+
+                    if (dest == vertPtr)
+                        return true;
+
+                    vertQueue.push(vertPtr);
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+
+bool Graph::DFS(VertexPtr src,VertexPtr dest)
+{
+
+    if (src == dest)
+        return true;
+
+    VertexPtr current = nullptr;
+
+    stack<VertexPtr> vertStack;
+    vertStack.push(src);
+
+    while(!vertStack.empty())
+    {
+        current = vertStack.top();
+        vertStack.pop();
+
+        if(current->isVisited() == true) continue;
+
+        visit(current);
+        auto edges = current->getEdges();
+        //visit all adjacent
+        for (const EdgePtr & e : *edges ){
+
+            if(VertexPtr vertPtr = e->getVertex().lock()){
+
+                if (dest == vertPtr){
+                    visit(dest);
+                    return true;
+                }
+
+                vertStack.push(vertPtr);
+            }
+        }
+    }
+
+    return false;
+}
+
+
 VertexPtr Graph::findVertex(const string &vertexName)
 {
     auto iter = verticesMap.find(vertexName);
