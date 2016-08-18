@@ -2,36 +2,44 @@
 
 #include "Common.h"
 
-struct Edge {
 
-    Edge(const VertexPtr &toVertex,u_int32_t weight);
+class Edge {
+
+public:
+
+    Edge(const VertexPtr &src, const VertexPtr &dest, u_int32_t weight );
 
     ~Edge() = default;
 
-    Edge(const Edge& that) :
-        vertex(that.vertex),
-        weight (that.weight)
+    Edge(const Edge& that)
+        : source(that.source.lock()),
+          destination(that.destination.lock()),
+          weight (that.weight)
     {
     }
 
-
     Edge& operator=(const Edge& that)
     {
-        vertex = that.vertex;
+        destination = that.destination.lock();
+        source = that.source.lock();
         weight = that.weight;
         return *this;
     }
 
+    pair<VertexPtr,VertexPtr> getVertices() const;
 
-    inline WeakVertexPtr getVertex(){
-        return vertex;
+    VertexPtr getSource() const;
+    VertexPtr getDestination()const;
+
+    inline void setSource(const VertexPtr &vert){
+        source = vert;
     }
 
-    inline void setVertex(const VertexPtr &vert){
-        vertex = vert;
+    inline void setDestination(const VertexPtr &vert){
+        destination = vert;
     }
 
-    inline u_int32_t getWeight(){
+    inline u_int32_t getWeight() const{
         return weight;
     }
 
@@ -39,12 +47,20 @@ struct Edge {
         weight = w;
     }
 
+    bool compareNamesUndirected(const Edge &edge) const;
+    bool comparePtrsUndirected(const Edge &edge) const;
+
+    bool compareNamesDirected(const Edge &edge) const;
+    bool comparePtrsDirected(const Edge &edge) const;
+
+    void print(bool withWeights) const;
 
 private:
-    WeakVertexPtr vertex;
+
+    WeakVertexPtr source;
+    WeakVertexPtr destination;
     u_int32_t weight;
 };
-
 
 
 

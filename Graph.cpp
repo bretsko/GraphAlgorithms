@@ -1,49 +1,264 @@
+
+#include "Edge.h"
+#include "Vertex.h"
 #include "DijkstraSolver.h"
+#include <memory>
 
-Graph::Graph(const VertexPtrMap &vertices):verticesMap(vertices){
-
+Graph::Graph(const VertexPtrMap &vertices): verticesMap (make_unique<VertexPtrMap>(vertices))
+{
 }
 
-bool Graph::BFS(VertexPtr src,VertexPtr dest)
+//--------------------------------VERTEX-----------------------------
+
+
+//if already present returns false
+bool Graph::addVertex(const string &vertexName, float x, float y)
 {
-    if (src == dest)
+    VertexPtr vert = nullptr;
+
+    if (x!=0 || y!=0){
+        vert = make_shared<Vertex>(vertexName, x, y);
+    }else {
+        vert = make_shared<Vertex>(vertexName);
+    }
+
+    bool result = verticesMap->insert( std::make_pair (vertexName ,vert )).second;
+    return result;
+}
+
+VertexPtr Graph::findVertex(const string &vertexName)
+{
+
+    auto iter = verticesMap->find(vertexName);
+
+    if (iter != verticesMap->end()){
+        VertexPtr foundVertex = iter->second;
+       // u_int32_t dist = foundVertex->getDistance();
+        //cerr << "Found: " << foundVertex->getName() << ", distance - " << dist << endl;
+        return foundVertex;
+    }
+
+    return nullptr;
+}
+
+bool Graph::contains(const VertexPtr &vert)
+{
+    string n = vert->getName();
+
+    if(verticesMap->count(n)!=0){
         return true;
-
-    VertexPtr current = nullptr;
-
-    queue<VertexPtr> vertQueue;
-    visit(src);
-    vertQueue.push(src);
-
-    while(!vertQueue.empty())
-    {
-        current = vertQueue.front();
-        vertQueue.pop();
-
-        auto edges = current->getEdges();
-
-        //visit all adjacents
-        for (const EdgePtr & e : *edges ){
-
-            if(VertexPtr vertPtr = e->getVertex().lock()){
-
-                if (vertPtr->isVisited() == false){
-                    visit(vertPtr);
-
-                    if (dest == vertPtr)
-                        return true;
-
-                    vertQueue.push(vertPtr);
-                }
-            }
-        }
     }
 
     return false;
 }
 
 
-bool Graph::DFS(VertexPtr src,VertexPtr dest)
+bool Graph::removeVertex(const string &vertexName)
+{
+    auto iter = verticesMap->find(vertexName);
+    if (iter != verticesMap->end()){
+        verticesMap->erase(iter);
+        return true;
+    }
+    return false;
+}
+
+
+//--------------------------------EDGE-----------------------------
+
+
+//check edge state and insert it
+bool Graph::addEdge(const EdgePtr &edge){
+
+    if (edge == nullptr)
+        return false;
+
+    if( findEdge(edge) != nullptr )
+        return false;
+
+    VertexPtr src = nullptr;
+    VertexPtr dest = nullptr;
+
+    src = edge->getDestination();
+    dest = edge->getDestination();
+
+    if(src == nullptr || dest == nullptr){
+        return false;
+    }
+
+    edgesSet.insert(edge);
+    return true;
+}
+
+
+//merges edges with common vertices and adds vertices if not present
+bool Graph::addEdge(const VertexPtr &dest, const VertexPtr &src, u_int32_t weight){
+
+    //considering only weighted graph
+    if(!dest || !src || src == dest || weight == 0)
+        return false;
+
+    //for undirected graph checking if either way edge is present
+    if(findEdge(dest,src))
+        return false;
+
+    //if vertices are not present in the graph add them
+    if(!contains(src)){
+        auto result = addVertex(src);
+        if (!result)
+            return false;
+    }
+
+    if(!contains(dest)){
+        auto result = addVertex(dest);
+        if (!result)
+            return false;
+    }
+
+    //connect if not connected
+    if(dest->getConnection(*src) == nullptr || src->getConnection(*dest) == nullptr){
+        bool success = connect(src, dest,weight);
+        if (!success)
+            return false;
+    }
+
+
+    //create new edge for the graph, so that we don't depend on any of the vertices
+    EdgePtr e = make_shared<Edge>(src, dest, weight);
+    edgesSet.insert(e);
+
+    return true;
+}
+
+
+//copies edge to the edgesSet
+bool Graph::addEdgeCopy(const EdgePtr &edge){
+
+    if (edge == nullptr)
+        return false;
+
+    EdgePtr e = make_shared<Edge>(*edge);
+
+    return addEdge(e);
+}
+
+//finds similiar edge with the same vertices (source and destination can be swicthed)
+EdgePtr Graph::findEdge(const EdgePtr &edge){
+    VertexPtr src = edge->getDestination();
+    VertexPtr dest = edge->getDestination();
+    return findEdge(src,dest);
+}
+
+EdgePtr Graph::findEdge(const VertexPtr &vert1, const VertexPtr &vert2){
+
+    //considering only weighted graph
+    if(!vert1 || !vert2 || vert1 == vert2)
+        return nullptr;
+
+    for ( const EdgePtr & e : edgesSet){
+
+        VertexPtr src = e->getDestination();
+        VertexPtr dest = e->getDestination();
+
+        if(src!=nullptr && dest!=nullptr){
+
+            if((src == vert1 || src== vert2) && (dest == vert1 || dest== vert2)){
+                return e;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+
+//--------------------------------OTHER-----------------------------
+
+
+bool Graph::connect(const string &vert1, const string &vert2, u_int32_t weight ){
+
+    auto v1 = findVertex(vert1);
+    auto v2 = findVertex(vert2);
+
+    if (v1 != nullptr && v2 != nullptr){
+        return connect(v1, v2, weight);
+    }
+
+    return false;
+}
+
+bool Graph::connect(const VertexPtr &vert1, const VertexPtr &vert2, u_int32_t weight ){
+
+    EdgePtr edge = make_shared<Edge>(vert1, vert2, weight);
+
+    //I believe that double check if the edge is present in multiset is not needed
+    //although edgesSet will add happily another duplicate here
+
+    edgesSet.insert(edge);
+
+    //adding both ways edges - for undirected graph
+    vert1->addEdge(edge);
+    vert2->addEdge(edge);
+
+    return true;
+}
+
+float Graph::calculateDistance(const VertexPtr &p1, const VertexPtr &p2)
+{
+    float diffY = p1->getY() - p2->getY();
+    float diffX = p1->getX() - p2->getX();
+    auto result = sqrt((diffY * diffY) + (diffX * diffX));
+
+    cout << "Manhattan distance " << p1->getName() << "-" << p2->getName() << ": " << result <<  endl;
+
+    return result;
+}
+
+void Graph::printEdges(const VertexPtr &vert ){
+
+    if(!vert)
+        return;
+
+    cerr << vert->getName() <<" is connected to: ";
+
+    for (const EdgePtr & e : *vert->getEdges()){
+
+        VertexPtr v = e->getDestination();
+
+        //TODO:  << ", "
+
+        if(v)
+            cerr << v->getName() << endl;
+    }
+
+    cerr << endl;
+}
+
+
+void Graph::printEdgesInVertices(VertexPtr ){
+
+    for (const auto & p: *verticesMap){
+        VertexPtr v =  p.second;
+        printEdges (v);
+    }
+}
+
+
+void Graph::printAllEdges(bool withWeights){
+
+    cerr << "\nGraph edges:\n"<< endl;
+
+    for (const EdgePtr & e : edgesSet){
+
+        e->print(withWeights);
+    }
+
+}
+
+
+
+
+bool Graph::DFS(const VertexPtr& src,const VertexPtr&  dest)
 {
 
     if (src == dest)
@@ -66,7 +281,7 @@ bool Graph::DFS(VertexPtr src,VertexPtr dest)
         //visit all adjacent
         for (const EdgePtr & e : *edges ){
 
-            if(VertexPtr vertPtr = e->getVertex().lock()){
+            if(VertexPtr vertPtr = e->getDestination()){
 
                 if (dest == vertPtr){
                     visit(dest);
@@ -82,76 +297,85 @@ bool Graph::DFS(VertexPtr src,VertexPtr dest)
 }
 
 
-VertexPtr Graph::findVertex(const string &vertexName)
+bool Graph::BFS(const VertexPtr& src,const VertexPtr& dest)
 {
-    auto iter = verticesMap.find(vertexName);
-    if (iter != verticesMap.end()){
-        return iter->second;
-    }
-    return nullptr;
-}
-
-bool Graph::contains(const VertexPtr &vertex)
-{
-    auto iter = verticesMap.find(vertex->getName());
-    if (iter != verticesMap.end()){
+    if (src == dest)
         return true;
-    }
-    return false;
-}
 
-bool Graph::addVertex(const string &vertexName)
-{
-    VertexPtr vert = make_shared<Vertex>(vertexName);
-    verticesMap.insert( {vertexName ,vert });
-    return true;
-}
+    VertexPtr current = nullptr;
 
-bool Graph::removeVertex(const string &vertexName)
-{
-    auto iter = verticesMap.find(vertexName);
-    if (iter != verticesMap.end()){
-        verticesMap.erase(iter);
-        return true;
-    }
-    return false;
-}
+    queue<VertexPtr> vertQueue;
+    visit(src);
+    vertQueue.push(src);
 
+    while(!vertQueue.empty())
+    {
+        current = vertQueue.front();
+        vertQueue.pop();
 
-bool Graph::connect(const string &vert1, const string &vert2, u_int32_t weight ){
+        auto edges = current->getEdges();
 
-    auto v1 = findVertex(vert1);
-    auto v2 = findVertex(vert2);
+        //visit all adjacents
+        for (const EdgePtr & e : *edges ){
 
-    if (v1 != nullptr && v2 != nullptr){
-        return connect(v1, v2, weight);
-    }
+            if(VertexPtr vertPtr = e->getDestination()){
 
-    return false;
-}
+                if (vertPtr->isVisited() == false){
+                    visit(vertPtr);
 
+                    if (dest == vertPtr)
+                        return true;
 
-bool Graph::connect(const VertexPtr &vert1, const VertexPtr &vert2, u_int32_t weight ){
-
-    auto edgeListPtr = vert1->getEdges();
-
-    for (const auto & e : *edgeListPtr){
-
-        if(VertexPtr vertPtr = e->getVertex().lock()){
-            //can only have one edge one way
-            if (vertPtr == vert2 )
-                return false;
+                    vertQueue.push(vertPtr);
+                }
+            }
         }
     }
 
-    //adding the reverse edge - for undirected graph
-
-    vert1->getEdges()->push_back(make_shared<Edge>(vert2,weight));
-    vert2->getEdges()->push_back(make_shared<Edge>(vert1,weight));
-
-    return true;
+    return false;
 }
 
+
+
+VertexPtr Graph::getNearestNeighbour(const VertexPtr & vert){
+    EdgePtr e = getSmallestEdge(vert);
+    return getTheOtherVertex (e,vert);
+}
+
+
+VertexPtr Graph::getTheOtherVertex(const EdgePtr& edge, const VertexPtr & vert){
+
+    if(!edge || !vert )
+        return nullptr;
+
+    VertexPtr v = edge->getDestination();
+
+    if(v != vert){
+        return v;
+    }else{
+        return edge->getSource();
+    }
+
+}
+
+EdgePtr Graph::getSmallestEdge(const VertexPtr & vert){
+
+    if( vert->getEdges()->size() == 0)
+        return nullptr;
+
+    EdgePtr smallest = vert->getEdges()->front();
+
+    if( vert->getEdges()->size() == 1)
+        return smallest;
+
+    for (const EdgePtr & e : *vert->getEdges()){
+        if (e->getWeight() < smallest->getWeight()){
+            smallest = e;
+        }
+    }
+
+    return smallest;
+}
 
 
 

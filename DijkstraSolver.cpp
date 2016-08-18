@@ -1,11 +1,12 @@
+
+#include "Graph.h"
 #include "DijkstraSolver.h"
 
 
-DijkstraSolver ::DijkstraSolver(const Graph &graph): SolverInterface(graph){
+DijkstraSolver ::DijkstraSolver(const GraphPtr &graph): Solver(graph){
 
     GraphPtr graphPtr = getGraph();
 
-    //init vertexPtrSet with graph vertice pointers
     for (const auto &i : graphPtr->getVertices()){
         vertexPtrSet.insert(i.second);
     }
@@ -33,14 +34,15 @@ bool DijkstraSolver::solve( const string & src,  const string & dest){
 
 
 
-
 bool DijkstraSolver::solve(GraphPtr graph, VertexPtr src, VertexPtr dest)
 {
     GraphPtr graphPtr = getGraph();
-    assert (src!=nullptr && dest!=nullptr);
-    assert(this->contains(src) && this->contains(dest));
+    VertexPtrMap verticesMap = graphPtr->getVertices();
 
-    if(graphPtr->getVertices().size() < 2){
+    if ( src==nullptr || dest==nullptr )
+        return false;
+
+    if(verticesMap.size() < 2){
         cerr << "No solution for " << graphPtr->getVertices().size() << " vertices" << endl;
         return false;
     }
@@ -69,19 +71,17 @@ bool DijkstraSolver::solve(GraphPtr graph, VertexPtr src, VertexPtr dest)
 
         for (auto &e : *edgesListPtr ){
 
-            if(VertexPtr v2 = e->getVertex().lock()){ //weak_ptr check
+            if(VertexPtr v2 = e->getDestination()){ //weak_ptr check
 
                 if(v2->getDistance() > v1->getDistance() + e->getWeight()){
 
                     auto newDist = v1->getDistance() + e->getWeight();
-
+                    // updateVertex(v2,newDist); // FIXIT: doesn't work
                     VertexPtr x (v2); //copy to reinsert updated Vertex
 
                     x->setDistance(newDist);
-                    x->setConnection(v1, e->getWeight());
-                    e->setVertex(x);
 
-                    vertexPtrSet.erase( v2 );
+                    vertexPtrSet.erase(v2);
                     vertexPtrSet.insert(x);
                 }
             }
@@ -90,14 +90,22 @@ bool DijkstraSolver::solve(GraphPtr graph, VertexPtr src, VertexPtr dest)
         v1 = popNonVisited();
     }
 
-    cout << "\nFinish! " << "Distance from " << src->getName() << " to " \
-         << dest->getName() << " is " << dest->getDistance() << endl;
-
     return true;
 }
 
+bool DijkstraSolver::solve(VertexPtr src, VertexPtr dest){
+    if (src==nullptr || dest==nullptr)
+        return false;
 
-bool DijkstraSolver::updateVertex(VertexPtr vert, u_int32_t distance){
+    GraphPtr graphPtr = getGraph();
+    return solve(graphPtr,src,dest);
+}
+
+
+bool DijkstraSolver::updateVertex(const VertexPtr &vert, u_int32_t distance){
+
+    if(!vert)
+        return false;
 
     auto vertexIter = vertexPtrSet.find(vert);
 
@@ -109,6 +117,7 @@ bool DijkstraSolver::updateVertex(VertexPtr vert, u_int32_t distance){
     x->setDistance(distance);
 
     vertexPtrSet.erase(vertexIter); //update element
+
     vertexPtrSet.insert(x);
 
     return true;
@@ -140,4 +149,10 @@ void DijkstraSolver::printDistances(){
     for (const auto & i : vertexPtrSet ){
         cerr << i->getName() << " : " << i->getDistance() << endl;
     }
+
+    //    for (const auto & p : graph->getVertices() ){
+    //        auto i = p.second;
+    //        cerr << i->getName() << " : " << i->getDistance() << endl;
+    //    }
+
 }

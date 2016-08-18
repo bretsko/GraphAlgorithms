@@ -4,20 +4,26 @@
 #include "Edge.h"
 #include "Common.h"
 
+class Vertex {
 
-struct Vertex {
+public:
 
     //init with default name "None"
     Vertex();
-
-    Vertex(const string &name, u_int32_t distance = std::numeric_limits<u_int32_t>::max());
-
     ~Vertex() = default;
+
+    Vertex(const string &name,
+           float x = 0,
+           float y = 0,
+           u_int32_t distance = std::numeric_limits<u_int32_t>::max()
+            );
 
     Vertex(const Vertex& that) :
         name(that.name),
         edges(that.edges),
         distance(that.distance),
+        x(that.x),
+        y(that.y),
         visited(that.visited)
     {
     }
@@ -27,24 +33,27 @@ struct Vertex {
         name = that.name;
         edges = that.edges;
         distance = that.distance;
+        x = that.x;
+        y = that.y ;
         visited = that.visited;
         return *this;
     }
 
-    void setConnection(const VertexPtr & vert, u_int32_t weight);
+    bool addEdge(const EdgePtr &edge);
 
-    EdgePtr getConnection(Vertex &vert);
+    EdgePtr getConnection(const Vertex &vert) const;
 
     void removeMutualConnection(Vertex &vert);
 
-    VertexPtr getNearestNeighbour();
-    EdgePtr getNearestNeighbourConnection();
+    VertexPtr getNearestNeighbour() const;
 
-    inline list<EdgePtr> * getEdges(){
+    EdgePtr getNearestNeighbourConnection() const;
+
+    inline const list<EdgePtr> * getEdges() const{
         return &edges;
     }
 
-    inline u_int32_t getDistance(){
+    inline u_int32_t getDistance() const{
         return distance;
     }
 
@@ -52,7 +61,7 @@ struct Vertex {
         distance = newDistance;
     }
 
-    inline string getName(){
+    inline string getName() const{
         return name;
     }
 
@@ -60,12 +69,27 @@ struct Vertex {
         name = newName;
     }
 
-    inline bool isVisited(){
+    inline bool isVisited() const{
         return visited;
     }
 
-    void setVisited(bool isvisited){
-        visited = isvisited;
+    inline float getX() const{
+        return x;
+    }
+
+    inline float getY() const{
+        return y;
+    }
+
+    inline void setVisited(bool isVisited){
+        visited = isVisited;
+    }
+
+
+    inline void printEdges(bool withWeights) const{
+        for(const EdgePtr & i : edges  ){
+            i->print(true);
+        }
     }
 
 private:
@@ -78,11 +102,15 @@ private:
     // distance from source
     u_int32_t distance;
 
+    //coordinates for Manhattan distance
+    float x;
+    float y;
+
     bool visited;
 };
 
 
-struct Compare
+struct CompareVertices
 {
     using is_transparent = void;
 
@@ -93,6 +121,29 @@ struct Compare
 };
 
 
+struct CompareEdgePtrByName
+{
+    using is_transparent = void;
 
+    bool operator() (const EdgePtr& lhs, const EdgePtr& rhs) const
+    {
+        if(!lhs->getDestination() || !rhs->getDestination() || !lhs->getSource() || !rhs->getSource())
+            return false;
 
+        bool r1 = lhs->getDestination()->getName() == lhs->getDestination()->getName();
+        bool r2 = rhs->getSource()->getName() == rhs->getSource()->getName();
+
+        return (r1 && r2);
+    }
+};
+
+struct CompareEdgePtrByWeight
+{
+    using is_transparent = void;
+
+    bool operator() (const EdgePtr& lhs, const EdgePtr& rhs) const
+    {
+        return lhs->getWeight() < rhs->getWeight();
+    }
+};
 

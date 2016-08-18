@@ -1,31 +1,29 @@
 #include "Vertex.h"
+#include "Edge.h"
 
-Vertex::Vertex(const string &name, u_int32_t distance):
+Vertex::Vertex(const string &name, float xCoord, float yCoord,u_int32_t distance):
     name (name),
     distance(distance),
-    visited (false) {
+    x(xCoord),
+    y(yCoord),
+    visited (false)
+{
 }
 
 Vertex::Vertex() : Vertex("None"){
 
 }
 
+bool Vertex::addEdge(const EdgePtr & edge )
+{
+    if(!edge)
+        return false;
 
-void Vertex::setConnection(const VertexPtr& vert, u_int32_t weight){
-
-    for (const EdgePtr& e : edges ){
-        if(VertexPtr vertPtr = e->getVertex().lock()){ //weak_ptr check
-            if (vertPtr == vert)
-                return;
-        }
-    }
-
-    EdgePtr edge = make_shared<Edge>(vert, weight);
     edges.push_back(edge);
+    return true;
 }
 
-
-EdgePtr Vertex::getNearestNeighbourConnection(){
+EdgePtr Vertex::getNearestNeighbourConnection() const{
 
     if (edges.size() == 0)
         return nullptr;
@@ -42,14 +40,14 @@ EdgePtr Vertex::getNearestNeighbourConnection(){
     return nearestNeighbour;
 }
 
-VertexPtr Vertex::getNearestNeighbour(){
+VertexPtr Vertex::getNearestNeighbour() const{
 
     EdgePtr nearestNeighbourConnection = getNearestNeighbourConnection();
 
     if(nearestNeighbourConnection == nullptr)
         return nullptr;
 
-    if(VertexPtr vertPtr = nearestNeighbourConnection->getVertex().lock()){
+    if(VertexPtr vertPtr = nearestNeighbourConnection->getDestination()){
         return vertPtr;
     }
 
@@ -57,10 +55,10 @@ VertexPtr Vertex::getNearestNeighbour(){
 }
 
 
-EdgePtr Vertex::getConnection(Vertex &vert){
+EdgePtr Vertex::getConnection(const Vertex &vert) const{
     for (const EdgePtr & e : edges ){
 
-        if(VertexPtr vertPtr = e->getVertex().lock()){
+        if(VertexPtr vertPtr = e->getDestination()){
             if (&vert == vertPtr.get() ){
                 return e;
             }
@@ -73,7 +71,7 @@ void Vertex::removeMutualConnection(Vertex &vert){
 
     for (const EdgePtr & e : vert.edges ){
 
-        if(VertexPtr vertPtr = e->getVertex().lock()){
+        if(VertexPtr vertPtr = e->getDestination()){
             if (this == vertPtr.get() ){
                 vert.edges.remove(e);
                 break;
@@ -83,12 +81,10 @@ void Vertex::removeMutualConnection(Vertex &vert){
 
     for (const EdgePtr & e : edges ){
 
-        if(VertexPtr vertPtr = e->getVertex().lock()){
+        if(VertexPtr vertPtr = e->getDestination()){
             if (&vert == vertPtr.get() )
                 edges.remove(e);
             break;
         }
     }
 }
-
-
