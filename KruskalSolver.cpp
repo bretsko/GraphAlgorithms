@@ -1,16 +1,27 @@
 #include "KruskalSolver.h"
+
 #include "Vertex.h"
 #include "Edge.h"
-#include "Solver.h"
-#include "Graph.h"
 #include "UnionFind.h"
 
 
-KruskalSolver ::KruskalSolver(const GraphPtr &graph): Solver(graph){
+KruskalSolver ::KruskalSolver(const GraphPtr &graphArg):m_graph(graphArg){
 
 }
 
-shared_ptr<EdgePtrSet> KruskalSolver::solve(const VertexPtr &start)
+const shared_ptr<EdgePtrSet> KruskalSolver::solve(const string &vertexName)
+{
+    VertexPtr v = nullptr;
+    v = graph()->findVertex(vertexName);
+    if(v)
+        return solve (v);
+
+    return nullptr;
+}
+
+
+
+const shared_ptr<EdgePtrSet> KruskalSolver::solve(const VertexPtr &start)
 {
     if (start == nullptr || start->getEdges()->empty())
         return nullptr;
@@ -19,13 +30,13 @@ shared_ptr<EdgePtrSet> KruskalSolver::solve(const VertexPtr &start)
 
     list<UnionFindPtr> unions;
 
-    EdgePtr smallestEdge = getGraph()->getSmallestEdge(start);
+    EdgePtr smallestEdge = graph()->getSmallestEdge(start);
 
     MST->insert(smallestEdge);
 
-    VertexPtr nearest = getGraph()->getTheOtherVertex(smallestEdge,start);
+    VertexPtr nearest = graph()->getTheOtherVertex(smallestEdge,start);
 
-    for (const auto & p : getGraph()->getVertices()){
+    for (const auto & p : graph()->getVertices()){
         UnionFindPtr u = createUnionFind(p.second);
         unions.push_back(u);
     }
@@ -35,9 +46,9 @@ shared_ptr<EdgePtrSet> KruskalSolver::solve(const VertexPtr &start)
 
     unionVertices(u_start, u_nearest);
 
-    bool doubleBreak;
+    bool doubleBreak = false;
 
-    u_int32_t count = getGraph()->getEdges().size();
+    u_int32_t count = graph()->getEdges().size();
 
     while(count!=0){
 
@@ -45,7 +56,7 @@ shared_ptr<EdgePtrSet> KruskalSolver::solve(const VertexPtr &start)
         VertexPtr b = nullptr;
 
         //iter edges starting with smallest
-        for (const EdgePtr & e1 : getGraph()->getEdges()){
+        for (const EdgePtr & e1 : graph()->getEdges()){
             if(doubleBreak){
                 doubleBreak = false;
                 break;
@@ -83,7 +94,7 @@ shared_ptr<EdgePtrSet> KruskalSolver::solve(const VertexPtr &start)
 
 
 
-UnionFindPtr KruskalSolver::findUnion(const VertexPtr &p, const list<UnionFindPtr> & unions){
+const UnionFindPtr KruskalSolver::findUnion(const VertexPtr &p, const list<UnionFindPtr> & unions)const{
 
     for (const UnionFindPtr & v  : unions){
         if(v->getThis()->getName() == p->getName())
@@ -91,6 +102,14 @@ UnionFindPtr KruskalSolver::findUnion(const VertexPtr &p, const list<UnionFindPt
     }
 
     return nullptr;
+}
+
+void KruskalSolver::printMST(const shared_ptr<EdgePtrSet> &MST)const{
+    cerr << "\nMST, size "<< MST->size() << ":\n" << endl;
+
+    for( const EdgePtr &e : *MST ){
+        e->print(true);
+    }
 }
 
 

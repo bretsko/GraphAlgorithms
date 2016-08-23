@@ -1,5 +1,5 @@
 #include "Vertex.h"
-#include "Edge.h"
+
 
 Vertex::Vertex(const string &name, float xCoord, float yCoord,u_int32_t distance):
     name (name),
@@ -23,7 +23,7 @@ bool Vertex::addEdge(const EdgePtr & edge )
     return true;
 }
 
-EdgePtr Vertex::getNearestNeighbourConnection() const{
+const EdgePtr Vertex::getNearestNeighbourConnection() const{
 
     if (edges.size() == 0)
         return nullptr;
@@ -40,13 +40,14 @@ EdgePtr Vertex::getNearestNeighbourConnection() const{
     return nearestNeighbour;
 }
 
-VertexPtr Vertex::getNearestNeighbour() const{
+const VertexPtr Vertex::getNearestNeighbour() const{
 
     EdgePtr nearestNeighbourConnection = getNearestNeighbourConnection();
 
     if(nearestNeighbourConnection == nullptr)
         return nullptr;
 
+    //weak_ptr check
     if(VertexPtr vertPtr = nearestNeighbourConnection->getDestination()){
         return vertPtr;
     }
@@ -55,7 +56,7 @@ VertexPtr Vertex::getNearestNeighbour() const{
 }
 
 
-EdgePtr Vertex::getConnection(const Vertex &vert) const{
+const EdgePtr Vertex::getConnection(const Vertex &vert) const{
     for (const EdgePtr & e : edges ){
 
         if(VertexPtr vertPtr = e->getDestination()){

@@ -1,7 +1,7 @@
 #include "UnionFind.h"
 #include "Utilities.h"
 
-bool unionVertices(UnionFindPtr &u1, UnionFindPtr &u2){
+bool unionVertices(const UnionFindPtr &u1, const UnionFindPtr &u2){
 
     if (!u1 || !u2 || !u1->getThis() || !u2->getThis())
         return false;
@@ -34,14 +34,14 @@ bool unionVertices(UnionFindPtr &u1, UnionFindPtr &u2){
     return true;
 }
 
-UnionFindPtr createUnionFind(const VertexPtr &ptr){
+const UnionFindPtr createUnionFind(const VertexPtr &ptr){
     UnionFindPtr u = make_shared<UnionFind>(ptr);
     u->setRoot(u);
     u->setParent(u);
     return u;
 }
 
-UnionFindPtr UnionFind::findRoot(){
+const UnionFindPtr UnionFind::findRoot(){
 
     rank = 0;
 
@@ -61,9 +61,7 @@ UnionFindPtr UnionFind::findRoot(){
     return ptr;
 }
 
-void UnionFind::setParent(const UnionFindPtr &ptr){
-    parent = ptr;
-}
+
 
 
 

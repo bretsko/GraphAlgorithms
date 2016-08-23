@@ -1,6 +1,6 @@
 #pragma once
+
 #include "Graph.h"
-#include "Solver.h"
 
 //In Kruskal's, you do not keep one connected component but a forest.
 //At each stage, you look at the globally smallest edge that does not
@@ -9,9 +9,12 @@
 //with N single-vertex trees, in N-1 steps, they would all have merged into one
 //if the graph was connected.
 
-class KruskalSolver : public Solver
+typedef EdgePtrSetComparedByName EdgePtrSet;
+
+class KruskalSolver
 {
 public:
+
     KruskalSolver(const GraphPtr & graph);
 
     ~KruskalSolver() = default;
@@ -19,17 +22,28 @@ public:
     KruskalSolver(const KruskalSolver& that) = delete;
     KruskalSolver& operator=(const KruskalSolver& that) = delete;
 
-    shared_ptr<EdgePtrSet> solve(const VertexPtr &vert);
+    const shared_ptr<EdgePtrSet> solve(const VertexPtr &vert);
 
-    inline shared_ptr<EdgePtrSet> solve(const string &vertexName)
-    {
-        auto v = getGraph()->findVertex(vertexName);
-        return solve ( v);
+    const shared_ptr<EdgePtrSet> solve(const string &vertexName);
+
+    const UnionFindPtr findUnion(const VertexPtr &p, const list<UnionFindPtr> &unions) const;
+
+    inline const GraphPtr graph()const{
+        return m_graph;
     }
 
-    UnionFindPtr findUnion(const VertexPtr &p, const list<UnionFindPtr> &unions);
-    shared_ptr<EdgePtrSet> solve1(const VertexPtr &vert);
+    void printMST(const shared_ptr<EdgePtrSet> & MST)const;
+
+    inline void visit(const VertexPtr &vert){
+        graph()->visit(vert);
+    }
+
+
+private:
+    GraphPtr m_graph;
 };
+
+
 
 
 

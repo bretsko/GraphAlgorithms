@@ -8,6 +8,9 @@
 //Undirected weighted graph
 struct Graph{
 public:
+
+    typedef EdgePtrSetComparedByName EdgePtrSet;
+
     Graph(): verticesMap (make_unique<VertexPtrMap>()) {}
     ~Graph() = default;
 
@@ -43,9 +46,9 @@ public:
         }
     }
 
-    bool contains(const VertexPtr &vert);
+    bool contains(const VertexPtr &vert) const;
 
-    VertexPtr findVertex(const string &vertexName);
+    VertexPtr findVertex(const string &vertexName) const;
 
     bool addVertex(const string &vertexName, float x = 0, float y = 0);
     bool removeVertex(const string &vertexName);
@@ -67,43 +70,38 @@ public:
     bool addEdge(const VertexPtr &vert1, const VertexPtr &vert2, u_int32_t weight);
     bool addEdgeCopy(const EdgePtr &edge);
 
-    EdgePtr findEdge(const EdgePtr &edge);
-    EdgePtr findEdge(const VertexPtr &vert1, const VertexPtr &vert2);
+    const EdgePtr findEdge(const EdgePtr &edge)const;
+    const EdgePtr findEdge(const VertexPtr &vert1, const VertexPtr &vert2) const;
 
     bool connect(const VertexPtr &vert1, const VertexPtr &vert2, u_int32_t weight);
     bool connect(const string &vert1, const string &vert2, u_int32_t weight);
 
-    inline VertexPtrMap getVertices() const{
+    inline const VertexPtrMap getVertices() const{
         return *verticesMap;
     }
 
-    inline EdgePtrSet getEdges() const{
+    inline const EdgePtrSet getEdges() const{
         return edgesSet;
     }
 
-    inline void visit(VertexPtr vert){
+    inline void visit(const VertexPtr &vert){
         cout << "\nVisiting " << vert->getName() << endl;
         vert->setVisited(true);
     }
 
-    void printAllEdges(bool withWeights);
-    void printEdgesInVertices(VertexPtr);
-    void printEdges(const VertexPtr &vert);
+    void printAllEdges(bool withWeights) const;
+    void printEdgesInVertices() const;
+    void printEdges(const VertexPtr &vert) const;
 
-    EdgePtr getSmallestEdge(const VertexPtr &vert);
-    VertexPtr getTheOtherVertex(const EdgePtr &edge, const VertexPtr &vert);
-    VertexPtr getNearestNeighbour(const VertexPtr &vert);
+    EdgePtr getSmallestEdge(const VertexPtr &vert) const;
+    VertexPtr getTheOtherVertex(const EdgePtr &edge, const VertexPtr &vert) const;
+    VertexPtr getNearestNeighbour(const VertexPtr &vert) const;
 
-    //used for Manhattan distance, TODO
-    float calculateDistance(const VertexPtr &p1, const VertexPtr &p2);
+    float calculateManhattanDistance(const VertexPtr &p1, const VertexPtr &p2) const;
 
 private:
 
     EdgePtrSet edgesSet;
     unique_ptr<VertexPtrMap> verticesMap;
 };
-
-
-
-
 

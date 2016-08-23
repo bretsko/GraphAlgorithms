@@ -1,8 +1,9 @@
 
 #pragma once
 
-#include "Edge.h"
 #include "Common.h"
+#include "Edge.h"
+
 
 class Vertex {
 
@@ -41,16 +42,20 @@ public:
 
     bool addEdge(const EdgePtr &edge);
 
-    EdgePtr getConnection(const Vertex &vert) const;
+    const EdgePtr getConnection(const Vertex &vert) const;
 
     void removeMutualConnection(Vertex &vert);
 
-    VertexPtr getNearestNeighbour() const;
+    const VertexPtr getNearestNeighbour() const;
 
-    EdgePtr getNearestNeighbourConnection() const;
+    const EdgePtr getNearestNeighbourConnection() const;
 
     inline const list<EdgePtr> * getEdges() const{
         return &edges;
+    }
+
+    inline void sortEdges(){
+        edges.sort(sortEdgesByWeight);
     }
 
     inline u_int32_t getDistance() const{
@@ -73,16 +78,17 @@ public:
         return visited;
     }
 
+    inline void setVisited(bool isVisited){
+        visited = isVisited;
+    }
+
+
     inline float getX() const{
         return x;
     }
 
     inline float getY() const{
         return y;
-    }
-
-    inline void setVisited(bool isVisited){
-        visited = isVisited;
     }
 
 
@@ -109,8 +115,7 @@ private:
     bool visited;
 };
 
-
-struct CompareVertices
+struct CompareVerticesByDistance
 {
     using is_transparent = void;
 

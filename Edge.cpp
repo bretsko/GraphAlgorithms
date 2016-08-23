@@ -1,26 +1,28 @@
+
 #include "Edge.h"
 #include "Vertex.h"
 
 Edge::Edge(const VertexPtr &src, const VertexPtr &dest, u_int32_t weight)
-    : source (src),
-      destination(dest),
-      weight (weight)
+    : m_source (src),
+      m_destination(dest),
+      m_weight (weight)
 {
 
 }
 
-pair<VertexPtr, VertexPtr> Edge::getVertices() const
+const pair<VertexPtr, VertexPtr> Edge::getVertices() const
 {
-    auto dest = destination.lock();
-    auto src = source.lock();
+    auto dest = m_destination.lock();
+    auto src = m_source.lock();
     if(src && dest)
         return {src, dest};
 
     return pair<VertexPtr,VertexPtr>({nullptr, nullptr});;
 }
 
-VertexPtr Edge::getDestination() const {
-    VertexPtr dest = destination.lock();
+const VertexPtr Edge::getDestination() const {
+
+    VertexPtr dest = m_destination.lock();
 
     if(dest){
         return dest;
@@ -89,8 +91,8 @@ bool Edge::comparePtrsDirected(const Edge &edge) const
 }
 
 
-VertexPtr Edge::getSource() const{
-    VertexPtr src = source.lock();
+const VertexPtr Edge::getSource() const{
+    VertexPtr src = m_source.lock();
     if(src){
         return src;
     }
@@ -102,11 +104,11 @@ VertexPtr Edge::getSource() const{
 void Edge::print(bool withWeights) const
 {
 
-    VertexPtr src = source.lock();
-    VertexPtr dest = destination.lock();
+    VertexPtr src = m_source.lock();
+    VertexPtr dest = m_destination.lock();
 
     if(withWeights){
-        cerr << src->getName() << " - " << dest->getName() << ", " << weight  << endl;
+        cerr << src->getName() << " - " << dest->getName() << ", " << m_weight  << endl;
     }else{
         cerr << src->getName() << " - " << dest->getName() << ", "  << endl;
     }
@@ -114,4 +116,8 @@ void Edge::print(bool withWeights) const
 }
 
 
-
+bool sortEdgesByWeight(const EdgePtr &l, const EdgePtr &r){
+    u_int32_t el = l->getWeight();
+    u_int32_t er = r->getWeight();
+    return ( el< er);
+}

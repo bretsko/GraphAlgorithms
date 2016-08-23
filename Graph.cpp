@@ -1,8 +1,6 @@
 
-#include "Edge.h"
-#include "Vertex.h"
-#include "DijkstraSolver.h"
-#include <memory>
+#include "Graph.h"
+
 
 Graph::Graph(const VertexPtrMap &vertices): verticesMap (make_unique<VertexPtrMap>(vertices))
 {
@@ -26,14 +24,14 @@ bool Graph::addVertex(const string &vertexName, float x, float y)
     return result;
 }
 
-VertexPtr Graph::findVertex(const string &vertexName)
+VertexPtr Graph::findVertex(const string &vertexName) const
 {
 
     auto iter = verticesMap->find(vertexName);
 
     if (iter != verticesMap->end()){
         VertexPtr foundVertex = iter->second;
-       // u_int32_t dist = foundVertex->getDistance();
+        // u_int32_t dist = foundVertex->getDistance();
         //cerr << "Found: " << foundVertex->getName() << ", distance - " << dist << endl;
         return foundVertex;
     }
@@ -41,7 +39,7 @@ VertexPtr Graph::findVertex(const string &vertexName)
     return nullptr;
 }
 
-bool Graph::contains(const VertexPtr &vert)
+bool Graph::contains(const VertexPtr &vert)const
 {
     string n = vert->getName();
 
@@ -143,13 +141,13 @@ bool Graph::addEdgeCopy(const EdgePtr &edge){
 }
 
 //finds similiar edge with the same vertices (source and destination can be swicthed)
-EdgePtr Graph::findEdge(const EdgePtr &edge){
+const EdgePtr Graph::findEdge(const EdgePtr &edge) const{
     VertexPtr src = edge->getDestination();
     VertexPtr dest = edge->getDestination();
     return findEdge(src,dest);
 }
 
-EdgePtr Graph::findEdge(const VertexPtr &vert1, const VertexPtr &vert2){
+const EdgePtr Graph::findEdge(const VertexPtr &vert1, const VertexPtr &vert2)const{
 
     //considering only weighted graph
     if(!vert1 || !vert2 || vert1 == vert2)
@@ -203,18 +201,8 @@ bool Graph::connect(const VertexPtr &vert1, const VertexPtr &vert2, u_int32_t we
     return true;
 }
 
-float Graph::calculateDistance(const VertexPtr &p1, const VertexPtr &p2)
-{
-    float diffY = p1->getY() - p2->getY();
-    float diffX = p1->getX() - p2->getX();
-    auto result = sqrt((diffY * diffY) + (diffX * diffX));
 
-    cout << "Manhattan distance " << p1->getName() << "-" << p2->getName() << ": " << result <<  endl;
-
-    return result;
-}
-
-void Graph::printEdges(const VertexPtr &vert ){
+void Graph::printEdges(const VertexPtr &vert )const{
 
     if(!vert)
         return;
@@ -235,7 +223,7 @@ void Graph::printEdges(const VertexPtr &vert ){
 }
 
 
-void Graph::printEdgesInVertices(VertexPtr ){
+void Graph::printEdgesInVertices( ) const{
 
     for (const auto & p: *verticesMap){
         VertexPtr v =  p.second;
@@ -244,7 +232,7 @@ void Graph::printEdgesInVertices(VertexPtr ){
 }
 
 
-void Graph::printAllEdges(bool withWeights){
+void Graph::printAllEdges(bool withWeights) const{
 
     cerr << "\nGraph edges:\n"<< endl;
 
@@ -269,6 +257,8 @@ bool Graph::DFS(const VertexPtr& src,const VertexPtr&  dest)
     stack<VertexPtr> vertStack;
     vertStack.push(src);
 
+    static u_int32_t counter = 0; //to measure algorithm efficiency
+
     while(!vertStack.empty())
     {
         current = vertStack.top();
@@ -278,13 +268,18 @@ bool Graph::DFS(const VertexPtr& src,const VertexPtr&  dest)
 
         visit(current);
         auto edges = current->getEdges();
+
         //visit all adjacent
         for (const EdgePtr & e : *edges ){
+
+            counter++;
 
             if(VertexPtr vertPtr = e->getDestination()){
 
                 if (dest == vertPtr){
                     visit(dest);
+                    cerr << "\nDFS: took " << counter << " steps to finish."<<  endl;
+
                     return true;
                 }
 
@@ -296,7 +291,6 @@ bool Graph::DFS(const VertexPtr& src,const VertexPtr&  dest)
     return false;
 }
 
-
 bool Graph::BFS(const VertexPtr& src,const VertexPtr& dest)
 {
     if (src == dest)
@@ -307,9 +301,11 @@ bool Graph::BFS(const VertexPtr& src,const VertexPtr& dest)
     queue<VertexPtr> vertQueue;
     visit(src);
     vertQueue.push(src);
+    static u_int32_t counter = 0; //to measure algorithm efficiency
 
     while(!vertQueue.empty())
     {
+
         current = vertQueue.front();
         vertQueue.pop();
 
@@ -318,14 +314,18 @@ bool Graph::BFS(const VertexPtr& src,const VertexPtr& dest)
         //visit all adjacents
         for (const EdgePtr & e : *edges ){
 
+            counter++;
+
             if(VertexPtr vertPtr = e->getDestination()){
 
                 if (vertPtr->isVisited() == false){
                     visit(vertPtr);
 
-                    if (dest == vertPtr)
-                        return true;
+                    if (dest == vertPtr){
+                        cerr << "\nBFS: took " << counter << " steps to finish."<<  endl;
 
+                        return true;
+                    }
                     vertQueue.push(vertPtr);
                 }
             }
@@ -337,13 +337,24 @@ bool Graph::BFS(const VertexPtr& src,const VertexPtr& dest)
 
 
 
-VertexPtr Graph::getNearestNeighbour(const VertexPtr & vert){
+VertexPtr Graph::getNearestNeighbour(const VertexPtr & vert) const{
     EdgePtr e = getSmallestEdge(vert);
     return getTheOtherVertex (e,vert);
 }
 
+float Graph::calculateManhattanDistance(const VertexPtr &p1, const VertexPtr &p2) const{
 
-VertexPtr Graph::getTheOtherVertex(const EdgePtr& edge, const VertexPtr & vert){
+    float diffY = p1->getY() - p2->getY();
+    float diffX = p1->getX() - p2->getX();
+    float result = sqrt((diffY * diffY) + (diffX * diffX));
+
+    //  cerr << "Manhattan distance " << p1->getName() << "-" << p2->getName() << ": " << result <<  endl;
+
+    return result;
+}
+
+
+VertexPtr Graph::getTheOtherVertex(const EdgePtr& edge, const VertexPtr & vert) const{
 
     if(!edge || !vert )
         return nullptr;
@@ -358,7 +369,7 @@ VertexPtr Graph::getTheOtherVertex(const EdgePtr& edge, const VertexPtr & vert){
 
 }
 
-EdgePtr Graph::getSmallestEdge(const VertexPtr & vert){
+EdgePtr Graph::getSmallestEdge(const VertexPtr & vert) const{
 
     if( vert->getEdges()->size() == 0)
         return nullptr;

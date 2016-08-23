@@ -4,9 +4,9 @@
 #include "Common.h"
 #include "Vertex.h"
 
-bool unionVertices(UnionFindPtr &u1, UnionFindPtr &u2);
+bool unionVertices(const UnionFindPtr &u1, const UnionFindPtr &u2);
 
-UnionFindPtr createUnionFind(const VertexPtr & ptr);
+const UnionFindPtr createUnionFind(const VertexPtr & ptr);
 
 //TODO: template
 struct UnionFind {
@@ -17,9 +17,9 @@ struct UnionFind {
 
     ~UnionFind() = default;
 
-    UnionFindPtr findRoot();
+    const UnionFindPtr findRoot();
 
-    inline UnionFindPtr getRoot() const{
+    inline const UnionFindPtr getRoot() const{
         return root.lock();
     }
 
@@ -27,15 +27,17 @@ struct UnionFind {
         root = ptr;
     }
 
-    inline VertexPtr getThis() const{
+    inline const VertexPtr getThis() const{
         return weakThis.lock();
     }
 
-    inline UnionFindPtr getParent() const{
+    inline const UnionFindPtr getParent() const{
         return parent.lock();
     }
 
-    void setParent(const UnionFindPtr& ptr);
+    inline void setParent(const UnionFindPtr &ptr){
+        parent = ptr;
+    }
 
     inline void setRank(u_int32_t r){
         rank = r;
@@ -46,9 +48,9 @@ struct UnionFind {
     }
 
 private:
+
     u_int32_t rank;
     WeakUnionFindPtr root;
     WeakUnionFindPtr parent;
     WeakVertexPtr weakThis;
-
 };

@@ -3,3 +3,5 @@
 void printit(const string & str){
     cerr << str << endl;
 }
+
+

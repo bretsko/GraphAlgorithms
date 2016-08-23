@@ -1,23 +1,33 @@
-#include "PrimsSolver.h"
-#include "Vertex.h"
-#include "Edge.h"
-#include "Solver.h"
-#include "Graph.h"
 
-PrimsSolver ::PrimsSolver(const GraphPtr &graph): Solver(graph){
+#include "PrimsSolver.h"
+
+
+
+PrimsSolver ::PrimsSolver(const GraphPtr &graphArg):m_graph(graphArg){
 
 }
 
-shared_ptr<EdgePtrSet> PrimsSolver::solve(const VertexPtr &vert)
+const shared_ptr<EdgePtrSet> PrimsSolver::solve(const std::__cxx11::string &vertexName)
 {
-    if ((vert == nullptr) || vert->getEdges()->empty())
+    VertexPtr v = graph()->findVertex(vertexName);
+
+    if(v)
+        return solve (v);
+
+    return nullptr;
+}
+
+
+const shared_ptr<EdgePtrSet> PrimsSolver::solve(const VertexPtr &vert)
+{
+    if (vert == nullptr || vert->getEdges()->empty())
         return nullptr;
 
     //keeps all edges added so far and potential edges to be evaluated,
     //based on inspection if any of the vertices in the new edge are  present in MST
     unique_ptr<EdgePtrSet> PQ = make_unique<EdgePtrSet>();
 
-    shared_ptr<EdgePtrSet> MST = make_unique<EdgePtrSet>();
+    shared_ptr<EdgePtrSet> MST = make_shared<EdgePtrSet>();
 
     //all vertices added to MST
     unique_ptr <set<VertexPtr>> vSet = make_unique<set<VertexPtr>>();
@@ -25,9 +35,7 @@ shared_ptr<EdgePtrSet> PrimsSolver::solve(const VertexPtr &vert)
     visit(vert);
     vSet->insert (vert);
 
-    EdgePtr smallest = nullptr;
-
-    smallest = vert->getEdges()->front();
+    EdgePtr smallest = vert->getEdges()->front();
 
     for (const EdgePtr & e : *vert->getEdges()){
         if (e->getWeight() < smallest->getWeight()){
@@ -46,7 +54,7 @@ shared_ptr<EdgePtrSet> PrimsSolver::solve(const VertexPtr &vert)
         return nullptr;
     }
 
-    u_int32_t count = getGraph()->getVertices().size();
+    u_int32_t count = graph()->getVertices().size();
 
     while(count!=0){
 
@@ -89,10 +97,16 @@ shared_ptr<EdgePtrSet> PrimsSolver::solve(const VertexPtr &vert)
     return MST;
 }
 
-shared_ptr<EdgePtrSet> PrimsSolver::solve(const std::__cxx11::string &vertexName)
-{
-    auto v = getGraph()->findVertex(vertexName);
-    return solve (v);
+
+
+
+
+void PrimsSolver::printMST(const shared_ptr<EdgePtrSet> &MST){
+    cerr << "\nMST, size "<< MST->size() << ":\n" << endl;
+
+    for( const EdgePtr &e : *MST ){
+        e->print(true);
+    }
 }
 
 

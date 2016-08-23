@@ -1,39 +1,46 @@
 #pragma once
 
-#include "Graph.h"
-#include "Common.h"
-#include "Solver.h"
+#include "PathFinderInterface.h"
 
+class DijkstraSolver : public PathFinderInterface{
 
-class DijkstraSolver : public Solver {
+    typedef set <VertexPtr, CompareVerticesByDistance> VertexPtrSet;
+    typedef shared_ptr <VertexPtrSet> VertexPtrSetPtr;
+
 public:
 
-    DijkstraSolver(const GraphPtr & graph);
-
-    virtual ~DijkstraSolver() = default;
-
+    DijkstraSolver(const GraphPtr & graphArg);
     DijkstraSolver(const DijkstraSolver& that) = delete;
     DijkstraSolver& operator=(const DijkstraSolver& that) = delete;
+    virtual ~DijkstraSolver() =default;
 
-    bool solve(const string &src, const string &dest);
-    bool solve( GraphPtr graph, VertexPtr src, VertexPtr dest);
+    void printDistances() const;
 
-    bool solve( VertexPtr src, VertexPtr dest);
+    virtual bool solveImpl(const GraphPtr &graphPtr, const VertexPtr& src, const VertexPtr& dest);
+    virtual bool solveImplOptimized(const GraphPtr &graphPtr, const VertexPtr& src, const VertexPtr &dest);
 
-    VertexPtr popNonVisited();
-
-    inline VertexPtr findVertex(const string &vertexName){
-        return getGraph()->findVertex(vertexName);
-    }
-
-    void printDistances();
-
-
-    bool updateVertex(const VertexPtr &vert, u_int32_t distance);
 private:
 
-    VertexPtrSet vertexPtrSet;
+    const VertexPtr popNonVisited();
+
+    bool updateVertex(const VertexPtr &vert, u_int32_t distance);
+
+    inline  const VertexPtrSetPtr vertexPtrSet() const{
+        return m_vertexPtrSet;
+    }
+
+    virtual inline const GraphPtr graph() const{
+        return m_graph;
+    }
+
+    void sortAllEdges();
+
+    GraphPtr m_graph;
+
+    VertexPtrSetPtr m_vertexPtrSet;
 };
+
+
 
 
 
